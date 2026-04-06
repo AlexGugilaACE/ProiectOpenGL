@@ -35,5 +35,11 @@
     <None Include="ground.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="skybox.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="skybox.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
