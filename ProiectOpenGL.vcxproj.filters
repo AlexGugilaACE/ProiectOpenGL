@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Resource Files\Shaders">
+    <Filter Include="Resource Files\shaders">
       <UniqueIdentifier>{c9caed11-511a-48f4-ba3e-82f9d3866791}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -30,10 +30,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ground.vert">
-      <Filter>Resource Files\Shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="ground.frag">
-      <Filter>Resource Files\Shaders</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
 </Project>
