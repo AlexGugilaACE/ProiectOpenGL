@@ -197,15 +197,41 @@ int main() {
     unsigned int skyTex = loadCubemap(faces);
     unsigned int asphaltTex = loadTexture("asphalt.jpg");
 
-    // Geometrie pentru o portiune de drum (un plan 1x1)
-    float roadVertices[] = {
-        // Pozitii            // Coordonate Textura
-        -0.5f, 0.0f, -0.5f,   0.0f, 0.0f,
-         0.5f, 0.0f, -0.5f,   1.0f, 0.0f,
-         0.5f, 0.0f,  0.5f,   1.0f, 1.0f,
-        -0.5f, 0.0f,  0.5f,   0.0f, 1.0f
-    };
-    unsigned int roadIndices[] = { 0, 1, 2, 0, 2, 3 };
+    // --- GEOMETRIE CIRCUIT CIRCULAR ---
+    std::vector<float> circleVertices;
+    std::vector<unsigned int> circleIndices;
+    int segments = 60; // Cu cat e mai mare, cu atat e mai rotund
+    float innerRadius = 25.0f;
+    float outerRadius = 33.0f;
+
+    for (int i = 0; i <= segments; i++) {
+        float angle = 2.0f * 3.14159f * (float)i / (float)segments;
+        float xCos = cos(angle);
+        float zSin = sin(angle);
+
+        // Punct interior
+        circleVertices.push_back(innerRadius * xCos);
+        circleVertices.push_back(0.0f);
+        circleVertices.push_back(innerRadius * zSin);
+        circleVertices.push_back((float)i / segments * 10.0f); // Tex U
+        circleVertices.push_back(0.0f);                        // Tex V
+
+        // Punct exterior
+        circleVertices.push_back(outerRadius * xCos);
+        circleVertices.push_back(0.0f);
+        circleVertices.push_back(outerRadius * zSin);
+        circleVertices.push_back((float)i / segments * 10.0f); // Tex U
+        circleVertices.push_back(1.0f);                        // Tex V
+    }
+
+    for (int i = 0; i < segments; i++) {
+        circleIndices.push_back(2 * i);
+        circleIndices.push_back(2 * i + 1);
+        circleIndices.push_back(2 * i + 2);
+        circleIndices.push_back(2 * i + 1);
+        circleIndices.push_back(2 * i + 3);
+        circleIndices.push_back(2 * i + 2);
+    }
 
     unsigned int roadVAO, roadVBO, roadEBO;
     glGenVertexArrays(1, &roadVAO);
@@ -214,10 +240,9 @@ int main() {
 
     glBindVertexArray(roadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, roadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(roadVertices), roadVertices, GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, circleVertices.size() * sizeof(float), &circleVertices[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, roadEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(roadIndices), roadIndices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, circleIndices.size() * sizeof(unsigned int), &circleIndices[0], GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -270,30 +295,16 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 12);
 
-        // --- DESENARE CIRCUIT RECTANGULAR ---
+        // --- DESENARE CIRCUIT CIRCULAR ---
         glUseProgram(shaderProgram);
         glBindVertexArray(roadVAO);
         glBindTexture(GL_TEXTURE_2D, asphaltTex);
 
-        float roadHeight = 2.1f; // Putin mai sus decat varful damburilor de pamant
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 2.1f, 15.0f)); // Ridicat putin peste iarba
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        // Segment Nord si Sud (Orizontale)
-        for (float zOffset : {-30.0f, 30.0f}) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(0.0f, roadHeight, zOffset));
-            model = glm::scale(model, glm::vec3(60.0f, 1.0f, 8.0f)); // Lungime 60, Latime drum 8
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-
-        // Segment Est si Vest (Verticale)
-        for (float xOffset : {-30.0f, 30.0f}) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(xOffset, roadHeight, 0.0f));
-            model = glm::scale(model, glm::vec3(8.0f, 1.0f, 52.0f)); // Latime drum 8, Lungime 52
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
+        glDrawElements(GL_TRIANGLES, circleIndices.size(), GL_UNSIGNED_INT, 0);
 
         // desenare sykbox
         glDepthFunc(GL_LEQUAL);
