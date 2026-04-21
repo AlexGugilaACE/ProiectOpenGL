@@ -195,6 +195,34 @@ int main() {
     std::vector<std::string> faces{ "sky_rt.tga", "sky_lf.tga", "sky_up.tga", "sky_dn.tga", "sky_ft.tga", "sky_bk.tga" };
     unsigned int rockTex = loadTexture("rock.jpg");
     unsigned int skyTex = loadCubemap(faces);
+    unsigned int asphaltTex = loadTexture("asphalt.jpg");
+
+    // Geometrie pentru o portiune de drum (un plan 1x1)
+    float roadVertices[] = {
+        // Pozitii            // Coordonate Textura
+        -0.5f, 0.0f, -0.5f,   0.0f, 0.0f,
+         0.5f, 0.0f, -0.5f,   1.0f, 0.0f,
+         0.5f, 0.0f,  0.5f,   1.0f, 1.0f,
+        -0.5f, 0.0f,  0.5f,   0.0f, 1.0f
+    };
+    unsigned int roadIndices[] = { 0, 1, 2, 0, 2, 3 };
+
+    unsigned int roadVAO, roadVBO, roadEBO;
+    glGenVertexArrays(1, &roadVAO);
+    glGenBuffers(1, &roadVBO);
+    glGenBuffers(1, &roadEBO);
+
+    glBindVertexArray(roadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, roadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(roadVertices), roadVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, roadEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(roadIndices), roadIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // while loop principal
     while (!glfwWindowShouldClose(window)) {
@@ -204,7 +232,10 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 500.0f);
-        glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 15.0f, 45.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 view = glm::lookAt(
+            glm::vec3(0.0f, 40.0f, 90.0f),  
+            glm::vec3(0.0f, 0.0f, 0.0f),   
+            glm::vec3(0.0f, 1.0f, 0.0f));  
 
         // desenare teren cu relief
         glUseProgram(shaderProgram);
@@ -222,22 +253,47 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, rockTex);
 
         // muntele 1
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(-35.0f, 1.2f, -30.0f));
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(-40.0f, 1.2f, -40.0f));
         model = glm::scale(model, glm::vec3(1.0f, 1.2f, 1.2f));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 12);
 
         // muntele 2
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.4f, -20.0f));
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.4f, -45.0f));
         model = glm::scale(model, glm::vec3(1.1f, 1.6f, 1.1f));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 12);
 
         // muntele 3
-        model = glm::translate(glm::mat4(1.0f), glm::vec3(30.0f, 1.2f, -40.0f));
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(40.0f, 1.2f, -40.0f));
         model = glm::scale(model, glm::vec3(0.8f, 1.3f, 1.4f));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 12);
+
+        // --- DESENARE CIRCUIT RECTANGULAR ---
+        glUseProgram(shaderProgram);
+        glBindVertexArray(roadVAO);
+        glBindTexture(GL_TEXTURE_2D, asphaltTex);
+
+        float roadHeight = 2.1f; // Putin mai sus decat varful damburilor de pamant
+
+        // Segment Nord si Sud (Orizontale)
+        for (float zOffset : {-30.0f, 30.0f}) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, roadHeight, zOffset));
+            model = glm::scale(model, glm::vec3(60.0f, 1.0f, 8.0f)); // Lungime 60, Latime drum 8
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
+
+        // Segment Est si Vest (Verticale)
+        for (float xOffset : {-30.0f, 30.0f}) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(xOffset, roadHeight, 0.0f));
+            model = glm::scale(model, glm::vec3(8.0f, 1.0f, 52.0f)); // Latime drum 8, Lungime 52
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
 
         // desenare sykbox
         glDepthFunc(GL_LEQUAL);
@@ -253,7 +309,8 @@ int main() {
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO); glDeleteVertexArrays(1, &skyVAO);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &skyVAO);
     glfwTerminate();
     return 0;
 }
