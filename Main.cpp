@@ -111,13 +111,13 @@ int main() {
     // generare teren
     std::vector<float> terrainVertices;
     int resolution = 100; // 100x100 patratele
-    float terrainSize = 100.0f;
+    float terrainSize = 215.0f;
 
     for (int i = 0; i <= resolution; i++) {
         for (int j = 0; j <= resolution; j++) {
             float x = -terrainSize / 2.0f + (float)j / resolution * terrainSize;
             float z = -terrainSize / 2.0f + (float)i / resolution * terrainSize;
-            
+
             // formula relief: Sin si Cos creeaza damburi line
             float y = sin(x * 0.2f) * cos(z * 0.2f) * 2.0f;
 
@@ -196,11 +196,13 @@ int main() {
     unsigned int rockTex = loadTexture("rock.jpg");
     unsigned int skyTex = loadCubemap(faces);
     unsigned int asphaltTex = loadTexture("asphalt.jpg");
+    unsigned int buildingTex = loadTexture("building.jpg");
+    unsigned int leavesTex = loadTexture("leaves.jpg");
 
-    // --- GEOMETRIE CIRCUIT CIRCULAR ---
+    // geometrie circuit
     std::vector<float> circleVertices;
     std::vector<unsigned int> circleIndices;
-    int segments = 60; // Cu cat e mai mare, cu atat e mai rotund
+    int segments = 60;
     float innerRadius = 25.0f;
     float outerRadius = 33.0f;
 
@@ -249,6 +251,63 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    float cubeVertices[] = {
+        // Pozitii            // Textura
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+
+    unsigned int cubeVAO, cubeVBO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+
     // while loop principal
     while (!glfwWindowShouldClose(window)) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
@@ -258,9 +317,9 @@ int main() {
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 500.0f);
         glm::mat4 view = glm::lookAt(
-            glm::vec3(0.0f, 40.0f, 90.0f),  
-            glm::vec3(0.0f, 0.0f, 0.0f),   
-            glm::vec3(0.0f, 1.0f, 0.0f));  
+            glm::vec3(0.0f, 40.0f, 90.0f),
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f));
 
         // desenare teren cu relief
         glUseProgram(shaderProgram);
@@ -305,6 +364,38 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
         glDrawElements(GL_TRIANGLES, circleIndices.size(), GL_UNSIGNED_INT, 0);
+
+        // desenare blocuri
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, buildingTex);
+        for (int i = 0; i < 5; i++) {
+            float angle = i * (2.0f * 3.14159f / 5.0f);
+            float dist = 20.0f;
+            float x = cos(angle) * dist;
+            float z = sin(angle) * dist + 15.0f;
+
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(x, 4.0f, z)); // 4.0f inaltime sa stea pe sol
+            model = glm::scale(model, glm::vec3(5.0f, 12.0f, 5.0f)); // dimensiunea blocurilor
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        // desenare "copaci"
+        glBindVertexArray(mntVAO);
+        glBindTexture(GL_TEXTURE_2D, leavesTex);
+        for (int i = 0; i < 5; i++) {
+            float angle = i * (2.0f * 3.14159f / 5.0f) + 0.5f;
+            float dist = 40.0f;
+            float x = cos(angle) * dist;
+            float z = sin(angle) * dist + 15.0f;
+
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(x, 2.0f, z));
+            model = glm::scale(model, glm::vec3(0.15f, 0.25f, 0.15f)); // dimensiunea copacilor
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 12);
+        }
 
         // desenare sykbox
         glDepthFunc(GL_LEQUAL);
